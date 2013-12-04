@@ -1,0 +1,108 @@
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+    </head>
+
+    <style>
+        body { background-color: #aaa; }
+        .switchbutton:hover { cursor: pointer; }
+        #debug { overflow-y: auto; height: 80px; }
+        #divRefresh { position: fixed; top: 10px; right: 20px; width: 70px; height:25px; }
+        #divConnected { position: fixed; top: 10px; right: 100px; width: 80px; height:25px; color: #cc7777; }
+        .lightOn { background-color: #22aa22; }
+        .lightOff { background-color: #005500; }
+    </style>
+
+    <script>
+        $().ready(function () {
+            var iosocket = io.connect();
+
+            console.log("This works too");
+            
+            iosocket.on('connect', function () {
+                $('#divConnected').html('Connected').css('color', '#229933');
+                                               
+                iosocket.on('message', function(message) {
+                    console.log("JSON data: " + message);
+                    var data = $.parseJSON(message);
+                    $.each(data, function(key,val) {
+                        if (val == 'on')
+                            $('#'+key).removeClass('lightOff').addClass('lightOn').text('On').attr('state', 'off');
+                        else
+                            $('#'+key).removeClass('lightOn').addClass('lightOff').text('Off').attr('state','on');
+                    });
+                });
+                iosocket.on('disconnect', function() {
+                    $('#divConnected').html('Disconnected').css('color','#cc7777');
+                });
+            });
+
+            // Get initial status of lights
+            iosocket.send('z');
+
+            // Refresh button
+            $('#refresh').click(function() {
+                iosocket.send('z');
+            });
+
+
+            $('.switchbutton').click(function() {
+                var id = $(this).attr('id').substring(0,3);
+                var state = $(this).attr('state');
+
+                iosocket.send(id + ' ' + state);
+
+                console.log("ID: " + id + " was moved to state " + state);
+            }); 
+        });
+
+    </script>
+
+    <body>
+        <div id="divRefresh">
+            <button id="refresh">Refresh</button>
+        </div>
+        <div id="divConnected">Disconnected</div>
+        <div class="lightRow">
+            Front Color:
+            <button id="pa0" class="switchbutton" state="on">??</button>
+        </div>
+        <div class="lightRow">
+            White: 
+            <button id="pa1" class="switchbutton" state="on">??</button>
+        </div>
+        <div class="lightRow">
+            Left Color: 
+            <button id="pa2" class="switchbutton" state="on">??</button>
+        </div>
+        <div class="lightRow" style="display:none;">
+            Blank: 
+            <button id="pa3" class="switchbutton" state="on">??</button>
+        </div>
+        <div class="lightRow">
+            Right Color: 
+            <button id="pa4" class="switchbutton" state="on">??</button>
+        </div>
+        <div class="lightRow">
+            Angel: 
+            <button id="pa5" class="switchbutton" state="on">??</button>
+        </div>
+        <hr />
+        <div class="lightRow">
+            Outside Front: 
+            <button id="pb0" class="switchbutton" state="on">??</button>
+        </div>
+        <div class="lightRow">
+            Outside Display: 
+            <button id="pb1" class="switchbutton" state="on">??</button>
+        </div>
+        <div class="lightRow">
+            Outside Door: 
+            <button id="pb2" class="switchbutton" state="on">??</button>
+        </div>
+
+        <div id="debug" style="margin:20px; border:1px solid red; padding: 5px;">Debugging:<br /></div>
+    </body>
+</html>
+
